@@ -1,0 +1,67 @@
+<div class="container-fluid">
+    <h1 class="page-header">Gozoomo BlueBook</h1>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    Upload new training file
+                </div>
+                <div class="panel-body">
+                    <form>
+                        <div class="form-group">
+                            <input type="file"  nv-file-select uploader="uploader">
+                        </div>
+                         <ul>
+                            <li ng-repeat="item in uploader.queue">
+                                Name: <span ng-bind="item.file.name"></span><br/>
+                                <button class="btn btn-success" ng-click="item.upload()">Upload</button>
+                            </li>
+                        </ul>
+                    </form>
+                    <div class="progress" style="">
+                        <div class="progress-bar" role="progressbar" ng-style="{ 'width': uploader.progress + '%' }" style="width: 0%;"></div>
+                    </div>
+                    <p class="error-msg">{{uploadError}}</p>
+                </div>
+            </div>
+
+        </div>
+
+         <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    Train and generate price data
+                </div>
+                <div class="panel-body">
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    Download bucketed pricelist
+                </div>
+                <div class="panel-body">
+
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    Update pricelist DB
+                </div>
+                <div class="panel-body">
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
