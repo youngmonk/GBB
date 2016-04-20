@@ -71,4 +71,4 @@ class GBBPredictor(object):
             for bucket_output in executor.map(self.__train_and_generate__, uniqueKeys):
                 result = pandas.concat([result, bucket_output], ignore_index=True)
 
-        result.to_csv('result_python3.csv', sep=',')
+        result.to_csv('public/result_python3.csv', sep=',')

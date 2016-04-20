@@ -1,4 +1,4 @@
-from flask import request, Response
+from flask import request, Response, send_from_directory
 import os
 from werkzeug import secure_filename
 import time
@@ -11,6 +11,7 @@ PREDICTOR_TASKS = []
 
 
 def init(app):
+
     def allowed_file(filename):
         return '.' in filename and \
                filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
@@ -18,7 +19,7 @@ def init(app):
     @app.route('/upload_training_data', methods=['POST'])
     def upload_training_data():
         app.logger.info("Uploading new training data")
-        PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Upload Training Data'})
+        PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Uploading Training Data'})
 
         file = request.files['file']
         if file and allowed_file(file.filename):
@@ -37,7 +38,10 @@ def init(app):
     def get_tasks():
         return Response(json.dumps(PREDICTOR_TASKS), mimetype='application/json')
 
-    @app.route('/train_and_generate')
+    @app.route('/train_and_generate', methods=['POST'])
     def train_and_generate():
+        app.logger.info("Training new model")
+        PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Training new model'})
+
         predictor_generator.GBBPredictor().train_and_generate()
         return 'success'
