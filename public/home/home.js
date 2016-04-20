@@ -34,6 +34,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
 //            $scope.uploader.clearQueue();
             $scope.uploadError = ""
             alert("Successfully uploaded");
+            getConsoleLog();
         },
         onErrorItem: function(item, response, status, headers) {
             $scope.uploadError = "An error occurred while uploading file"
@@ -46,6 +47,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
         $http.post('/train_and_generate', {})
             .success(function(res) {
                 $scope.status = 'IDLE';
+                getConsoleLog();
             })
             .error(function(err) {
                 $scope.status = 'IDLE';

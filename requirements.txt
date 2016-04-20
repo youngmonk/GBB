@@ -1,8 +1,5 @@
 Flask==0.10.1
-decorator==4.0.2
-defer==1.0.6
 numpy==1.11.0
 pandas==0.18.0
-pexpect==3.2
 scikit-learn==0.17.1
 scipy==0.14.1
