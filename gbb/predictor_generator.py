@@ -9,7 +9,6 @@ class GBBPredictor(object):
     def __init__(self):
         self.txn = pandas.read_csv('txn.csv')
         self.variant_mapper = pandas.read_csv('MappingPricer.csv')
-        self.variant_mapper = self.variant_mapper[self.variant_mapper['Variant'] != self.variant_mapper['Variant_Updated']]
         self.variant_mapper = self.variant_mapper[['Variant', 'Variant_Updated']]
 
     # private method
@@ -25,6 +24,8 @@ class GBBPredictor(object):
         txn = txn[['key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
 
         # mapping in variants
+        mapping = self.variant_mapper.set_index('Variant').to_dict()
+        txn['Variant'] = txn['Variant'].apply(lambda x: mapping['Variant'][x])
 
         return txn
 
