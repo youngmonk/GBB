@@ -17,15 +17,16 @@ class GBBPredictor(object):
         txn['Variant'] = txn['Variant'].str.upper()
         txn['City'] = txn['City'].str.upper()
 
+        # mapping in variants
+        mapping = self.variant_mapper.set_index('Variant').to_dict()
+        # return mapping for x or x by default
+        txn['Variant'] = txn['Variant'].apply(lambda x: mapping['Variant_Updated'].get(x, x))
+
         txn['key'] = txn['Model'] + "$" + txn['Variant'] + "$" + txn['City']
         txn['Age'] = txn['Transaction_Year'] - txn['Year']
 
         # removing unnecessary columns
         txn = txn[['key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
-
-        # mapping in variants
-        mapping = self.variant_mapper.set_index('Variant').to_dict()
-        txn['Variant'] = txn['Variant'].apply(lambda x: mapping['Variant'][x])
 
         return txn
 
