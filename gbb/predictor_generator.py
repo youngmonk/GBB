@@ -10,6 +10,10 @@ class GBBPredictor(object):
         self.txn = pandas.read_csv('txn.csv')
         self.variant_mapper = pandas.read_csv('MappingPricer.csv')
         self.variant_mapper = self.variant_mapper[['Variant', 'Variant_Updated']]
+        self.variant_mapper['Variant'] = self.variant_mapper['Variant'].str.upper()
+        self.variant_mapper['Variant_Updated'] = self.variant_mapper['Variant_Updated'].str.upper()
+        self.mapping = self.variant_mapper.set_index('Variant').to_dict()
+        self.mapping = self.mapping['Variant_Updated']
 
     # private method
     def __preprocess_transactions__(self, txn):
@@ -18,9 +22,8 @@ class GBBPredictor(object):
         txn['City'] = txn['City'].str.upper()
 
         # mapping in variants
-        mapping = self.variant_mapper.set_index('Variant').to_dict()
-        # return mapping for x or x by default
-        txn['Variant'] = txn['Variant'].apply(lambda x: mapping['Variant_Updated'].get(x, x))
+        # if no mapping present return the variant as it is
+        txn['Variant'] = txn['Variant'].apply(lambda x: self.mapping.get(x, x))
 
         txn['key'] = txn['Model'] + "$" + txn['Variant'] + "$" + txn['City']
         txn['Age'] = txn['Transaction_Year'] - txn['Year']
@@ -30,13 +33,33 @@ class GBBPredictor(object):
 
         return txn
 
+    def __postprocess_predictions__(self, result):
+        inv_map = {}
+        for k, v in self.mapping.items():
+            if k != v:
+                inv_map[v] = inv_map.get(v, [])
+                inv_map[v].append(k)
+
+        # add new rows for inverse mapping
+        for variant in inv_map:
+            res_subset = result[result['Variant'] == variant].copy(deep=True)
+            similar_variants = inv_map[variant]
+
+            for similar_variant in similar_variants:
+                similar_variant_data = res_subset.copy(deep=True)
+                similar_variant_data['Variant'] = similar_variant
+                result = pandas.concat([result, similar_variant_data], ignore_index=True)
+
+        return result
+
+
     def __train_and_generate__(self, inputKey):
         training_data = self.txn[self.txn['key'] == inputKey]
         bucketedRes = pandas.DataFrame(
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
         rowCnt = 0
 
-        if training_data.size < 15:
+        if len(training_data.index) < 15:
             return bucketedRes
 
         features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
@@ -78,4 +101,5 @@ class GBBPredictor(object):
             for bucket_output in executor.map(self.__train_and_generate__, uniqueKeys):
                 result = pandas.concat([result, bucket_output], ignore_index=True)
 
-        result.to_csv('public/result_python3.csv', sep=',')
+        result = self.__postprocess_predictions__(result)
+        result.to_csv('result_python3.csv', sep=',')
