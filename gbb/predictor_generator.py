@@ -7,7 +7,10 @@ import concurrent.futures
 class GBBPredictor(object):
 
     def __init__(self):
-        self.txn = ''
+        self.txn = pandas.read_csv('txn.csv')
+        self.variant_mapper = pandas.read_csv('MappingPricer.csv')
+        self.variant_mapper = variant_mapper[variant_mapper['Variant'] != variant_mapper['Variant_Updated']]
+        self.variant_mapper = self.variant_mapper[['Variant', 'Variant_Updated']]
 
     # private method
     def __preprocess_transactions__(self, txn):
@@ -20,6 +23,9 @@ class GBBPredictor(object):
 
         # removing unnecessary columns
         txn = txn[['key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
+
+        # mapping in variants
+
         return txn
 
     def __train_and_generate__(self, inputKey):
@@ -59,7 +65,6 @@ class GBBPredictor(object):
         return bucketedRes
 
     def train_and_generate(self):
-        self.txn = pandas.read_csv('txn.csv')
         self.txn = self.__preprocess_transactions__(self.txn)
 
         uniqueKeys = self.txn['key'].unique()

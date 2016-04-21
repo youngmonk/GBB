@@ -11,10 +11,11 @@
         <div class="col-md-3">
             <div class="panel panel-primary">
                 <div class="panel-heading">
-                    Upload new training file
+                    Upload new training file or mapping file.
                 </div>
                 <div class="panel-body">
-                    <form>
+                    <small>Note : Transaction data should be named txn.csv and mapping file as MappingPricer.csv</small>
+                    <form style="padding-top: 15px">
                         <div class="form-group">
                             <input type="file"  nv-file-select uploader="uploader" ng-disabled="status !== 'IDLE'">
                         </div>

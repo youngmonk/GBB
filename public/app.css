@@ -7,3 +7,7 @@
 .error-msg {
     color: red;
 }
+
+.panel {
+    min-height: 200px;
+}
