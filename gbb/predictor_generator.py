@@ -52,16 +52,22 @@ class GBBPredictor(object):
 
         return result
 
-
+    # Trains model for particular model, version and city. Generates data for
+    # different bins of mileage and year of manufacturing
+    # Returns a tuple of result and error
     def __train_and_generate__(self, inputKey):
         training_data = self.txn[self.txn['key'] == inputKey]
         bucketedRes = pandas.DataFrame(
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
+        errors = pandas.DataFrame(columns=['Key', 'Msg'])
+
         try:
             rowCnt = 0
 
             if len(training_data.index) < 15:
-                return bucketedRes
+                errors.set_value(0, 'Key', inputKey)
+                errors.set_value(0, 'Msg', 'Less than 15 samples')
+                return errors, None
 
             features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
             labels = training_data['Sold_Price'].as_matrix()
@@ -88,9 +94,12 @@ class GBBPredictor(object):
                     rowCnt += 1
 
             print('Finished for ' + inputKey + ". ")
+            return None, bucketedRes
         except:
             print('Exception for ' + inputKey + ". ")
-        return bucketedRes
+            errors.set_value(0, 'Key', inputKey)
+            errors.set_value(0, 'Msg', ' error in data')
+            return errors, None
 
     def train_and_generate(self):
         self.txn = self.__preprocess_transactions__(self.txn)
@@ -99,10 +108,15 @@ class GBBPredictor(object):
 
         result = pandas.DataFrame(
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
+        errors = pandas.DataFrame(columns=['Key', 'Msg'])
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
-            for bucket_output in executor.map(self.__train_and_generate__, uniqueKeys):
-                result = pandas.concat([result, bucket_output], ignore_index=True)
+            for (err, bucket_output) in executor.map(self.__train_and_generate__, uniqueKeys):
+                if bucket_output is not None:
+                    result = pandas.concat([result, bucket_output], ignore_index=True)
+                if err is not None:
+                    errors = pandas.concat([errors, err], ignore_index=True)
 
         result = self.__postprocess_predictions__(result)
         result.to_csv('public/result_python3.csv', sep=',')
+        errors.to_csv('public/training_errors.csv', sep=',')
