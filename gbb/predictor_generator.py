@@ -57,36 +57,39 @@ class GBBPredictor(object):
         training_data = self.txn[self.txn['key'] == inputKey]
         bucketedRes = pandas.DataFrame(
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
-        rowCnt = 0
+        try:
+            rowCnt = 0
 
-        if len(training_data.index) < 15:
-            return bucketedRes
+            if len(training_data.index) < 15:
+                return bucketedRes
 
-        features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
-        labels = training_data['Sold_Price'].as_matrix()
+            features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
+            labels = training_data['Sold_Price'].as_matrix()
 
-        clf = Ridge()
-        clf.fit(features, labels)
+            clf = Ridge()
+            clf.fit(features, labels)
 
-        for testYear in range(2004, 2016):
-            for testOutKms in range(10000, 160000, 10000):
-                testAge = 2016 - testYear
-                inputSample = numpy.array([testYear, 1, testOutKms, testAge])
-                inputSample = inputSample.reshape(1, -1)
-                predictedPrice = clf.predict(inputSample)
-                predictedPrice = round(predictedPrice[0])
-                bucketedRes.set_value(rowCnt, 'Model', inputKey.split('$')[0])
-                bucketedRes.set_value(rowCnt, 'Variant', inputKey.split('$')[1])
-                bucketedRes.set_value(rowCnt, 'City', inputKey.split('$')[2])
-                bucketedRes.set_value(rowCnt, 'Ownership', 1)
-                bucketedRes.set_value(rowCnt, 'Year', testYear)
-                bucketedRes.set_value(rowCnt, 'Out_Kms', testOutKms)
-                bucketedRes.set_value(rowCnt, 'key', inputKey)
-                bucketedRes.set_value(rowCnt, 'Age', testAge)
-                bucketedRes.set_value(rowCnt, 'predPrice', predictedPrice)
-                rowCnt += 1
+            for testYear in range(2004, 2016):
+                for testOutKms in range(10000, 160000, 10000):
+                    testAge = 2016 - testYear
+                    inputSample = numpy.array([testYear, 1, testOutKms, testAge])
+                    inputSample = inputSample.reshape(1, -1)
+                    predictedPrice = clf.predict(inputSample)
+                    predictedPrice = round(predictedPrice[0])
+                    bucketedRes.set_value(rowCnt, 'Model', inputKey.split('$')[0])
+                    bucketedRes.set_value(rowCnt, 'Variant', inputKey.split('$')[1])
+                    bucketedRes.set_value(rowCnt, 'City', inputKey.split('$')[2])
+                    bucketedRes.set_value(rowCnt, 'Ownership', 1)
+                    bucketedRes.set_value(rowCnt, 'Year', testYear)
+                    bucketedRes.set_value(rowCnt, 'Out_Kms', testOutKms)
+                    bucketedRes.set_value(rowCnt, 'key', inputKey)
+                    bucketedRes.set_value(rowCnt, 'Age', testAge)
+                    bucketedRes.set_value(rowCnt, 'predPrice', predictedPrice)
+                    rowCnt += 1
 
-        print('Finished for ' + inputKey + ". ")
+            print('Finished for ' + inputKey + ". ")
+        except:
+            print('Exception for ' + inputKey + ". ")
         return bucketedRes
 
     def train_and_generate(self):
