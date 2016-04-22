@@ -19,11 +19,10 @@ def init(app):
     @app.route('/upload_training_data', methods=['POST'])
     def upload_training_data():
         app.logger.info("Uploading new training data")
-        PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Uploading Training Data'})
-
         file = request.files['file']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Uploaded ' + filename})
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return 'success'
 

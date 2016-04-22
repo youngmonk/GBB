@@ -41,6 +41,10 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
         }
     });
 
+    jQuery("input#fileId").change(function () {
+        $scope.uploader.clearQueue();
+    });
+
     $scope.triggerTraining = function() {
         $scope.status = 'Training in Progress';
 

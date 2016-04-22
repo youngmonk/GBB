@@ -17,7 +17,7 @@
                     <small>Note : Transaction data should be named txn.csv and mapping file as MappingPricer.csv</small>
                     <form style="padding-top: 15px">
                         <div class="form-group">
-                            <input type="file"  nv-file-select uploader="uploader" ng-disabled="status !== 'IDLE'">
+                            <input type="file" id="fileId"  nv-file-select uploader="uploader" ng-disabled="status !== 'IDLE'">
                         </div>
                          <ul>
                             <li ng-repeat="item in uploader.queue">
