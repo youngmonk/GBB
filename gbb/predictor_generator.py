@@ -59,7 +59,7 @@ class GBBPredictor(object):
         training_data = self.txn[self.txn['key'] == inputKey]
         bucketedRes = pandas.DataFrame(
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
-        errors = pandas.DataFrame(columns=['Key', 'Msg'])
+        errors = pandas.DataFrame(columns=['Key', 'Msg', 'Count'])
 
         try:
             rowCnt = 0
@@ -67,6 +67,7 @@ class GBBPredictor(object):
             if len(training_data.index) < 15:
                 errors.set_value(0, 'Key', inputKey)
                 errors.set_value(0, 'Msg', 'Less than 15 samples')
+                errors.set_value(0, 'Count', len(training_data.index))
                 return errors, None
 
             features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
@@ -108,7 +109,7 @@ class GBBPredictor(object):
 
         result = pandas.DataFrame(
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
-        errors = pandas.DataFrame(columns=['Key', 'Msg'])
+        errors = pandas.DataFrame(columns=['Key', 'Msg', 'Count'])
 
         with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
             for (err, bucket_output) in executor.map(self.__train_and_generate__, uniqueKeys):
