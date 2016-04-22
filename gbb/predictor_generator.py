@@ -102,4 +102,4 @@ class GBBPredictor(object):
                 result = pandas.concat([result, bucket_output], ignore_index=True)
 
         result = self.__postprocess_predictions__(result)
-        result.to_csv('result_python3.csv', sep=',')
+        result.to_csv('public/result_python3.csv', sep=',')
