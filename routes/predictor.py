@@ -42,5 +42,9 @@ def init(app):
         app.logger.info("Training new model")
         PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Training new model'})
 
+        start_time = time.time()
         predictor_generator.GBBPredictor().train_and_generate()
+        finish_time = time.time()
+
+        print("Finished in " + str(finish_time - start_time) + " secs")
         return 'success'

@@ -72,9 +72,9 @@ class GBBPredictor(object):
 
             features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
             labels = training_data['Sold_Price'].as_matrix()
+            labels = numpy.log10(labels)
 
-            clf = Ridge()
-            clf.fit(features, labels)
+            clf = Ridge(fit_intercept=True, normalize=True).fit(features, labels)
 
             for testYear in range(2004, 2016):
                 for testOutKms in range(10000, 160000, 10000):
@@ -82,7 +82,7 @@ class GBBPredictor(object):
                     inputSample = numpy.array([testYear, 1, testOutKms, testAge])
                     inputSample = inputSample.reshape(1, -1)
                     predictedPrice = clf.predict(inputSample)
-                    predictedPrice = round(predictedPrice[0])
+                    predictedPrice = round(10**predictedPrice[0])
                     bucketedRes.set_value(rowCnt, 'Model', inputKey.split('$')[0])
                     bucketedRes.set_value(rowCnt, 'Variant', inputKey.split('$')[1])
                     bucketedRes.set_value(rowCnt, 'City', inputKey.split('$')[2])
