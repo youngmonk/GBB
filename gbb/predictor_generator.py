@@ -1,7 +1,25 @@
 import numpy
 import pandas
 from sklearn.linear_model import Ridge
+from sklearn.svm import SVR
 import concurrent.futures
+from sklearn.preprocessing import StandardScaler
+
+LOG_FLAG = True
+NORMALIZATION_FLAG = False
+LINEAR = True
+
+
+def generate_buckets():
+    bucket_data = []
+
+    for testYear in range(2004, 2016):
+        for testOutKms in range(10000, 160000, 10000):
+            testAge = 2016 - testYear
+            inputSample = [testYear, 1, testOutKms, testAge]
+            bucket_data.append(inputSample)
+
+    return numpy.array(bucket_data)
 
 
 class GBBPredictor(object):
@@ -14,6 +32,7 @@ class GBBPredictor(object):
         self.variant_mapper['Variant_Updated'] = self.variant_mapper['Variant_Updated'].str.upper()
         self.mapping = self.variant_mapper.set_index('Variant').to_dict()
         self.mapping = self.mapping['Variant_Updated']
+        self.bucketed_queries = generate_buckets()
 
     # private method
     def __preprocess_transactions__(self, txn):
@@ -62,8 +81,6 @@ class GBBPredictor(object):
         errors = pandas.DataFrame(columns=['Key', 'Msg', 'Count'])
 
         try:
-            rowCnt = 0
-
             if len(training_data.index) < 15:
                 errors.set_value(0, 'Key', inputKey)
                 errors.set_value(0, 'Msg', 'Less than 15 samples')
@@ -72,27 +89,41 @@ class GBBPredictor(object):
 
             features = training_data[['Year', 'Ownership', 'Out_Kms', 'Age']].as_matrix()
             labels = training_data['Sold_Price'].as_matrix()
-            labels = numpy.log10(labels)
+            bucketed_queries = self.bucketed_queries
 
-            clf = Ridge(fit_intercept=True, normalize=True).fit(features, labels)
+            if LOG_FLAG:
+                labels = numpy.log(labels)
 
-            for testYear in range(2004, 2016):
-                for testOutKms in range(10000, 160000, 10000):
-                    testAge = 2016 - testYear
-                    inputSample = numpy.array([testYear, 1, testOutKms, testAge])
-                    inputSample = inputSample.reshape(1, -1)
-                    predictedPrice = clf.predict(inputSample)
-                    predictedPrice = round(10**predictedPrice[0])
-                    bucketedRes.set_value(rowCnt, 'Model', inputKey.split('$')[0])
-                    bucketedRes.set_value(rowCnt, 'Variant', inputKey.split('$')[1])
-                    bucketedRes.set_value(rowCnt, 'City', inputKey.split('$')[2])
-                    bucketedRes.set_value(rowCnt, 'Ownership', 1)
-                    bucketedRes.set_value(rowCnt, 'Year', testYear)
-                    bucketedRes.set_value(rowCnt, 'Out_Kms', testOutKms)
-                    bucketedRes.set_value(rowCnt, 'key', inputKey)
-                    bucketedRes.set_value(rowCnt, 'Age', testAge)
-                    bucketedRes.set_value(rowCnt, 'predPrice', predictedPrice)
-                    rowCnt += 1
+            if NORMALIZATION_FLAG:
+                feature_scaler = StandardScaler().fit(features)
+                label_scaler = StandardScaler().fit(labels)
+                features = feature_scaler.transform(features)
+                labels = label_scaler.transform(labels)
+                bucketed_queries = feature_scaler.transform(bucketed_queries)
+
+            if LINEAR:
+                clf = Ridge(fit_intercept=True, normalize=True).fit(features, labels)
+            else:
+                clf = SVR(C=100, gamma=0.001, epsilon=0.001, kernel='rbf').fit(features, labels)
+
+            label_pred = clf.predict(bucketed_queries)
+
+            # denormalize results
+            if NORMALIZATION_FLAG:
+                label_pred = label_pred*label_scaler.scale_ + label_scaler.mean_
+
+            if LOG_FLAG:
+                label_pred = numpy.exp(label_pred)
+                label_pred = numpy.round(label_pred)
+
+            bucketedRes['Year'] = self.bucketed_queries[:, 0]
+            bucketedRes['Ownership'] = self.bucketed_queries[:, 1]
+            bucketedRes['Out_Kms'] = self.bucketed_queries[:, 2]
+            bucketedRes['Age'] = self.bucketed_queries[:, 3]
+            bucketedRes['Model'] = inputKey.split('$')[0]
+            bucketedRes['Variant'] = inputKey.split('$')[1]
+            bucketedRes['City'] = inputKey.split('$')[2]
+            bucketedRes['predPrice'] = label_pred
 
             print('Finished for ' + inputKey + ". ")
             return None, bucketedRes
@@ -111,12 +142,18 @@ class GBBPredictor(object):
             columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
         errors = pandas.DataFrame(columns=['Key', 'Msg', 'Count'])
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
-            for (err, bucket_output) in executor.map(self.__train_and_generate__, uniqueKeys):
-                if bucket_output is not None:
-                    result = pandas.concat([result, bucket_output], ignore_index=True)
-                if err is not None:
-                    errors = pandas.concat([errors, err], ignore_index=True)
+        # with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+        #     for (err, bucket_output) in executor.map(self.__train_and_generate__, uniqueKeys):
+        #         if bucket_output is not None:
+        #             result = pandas.concat([result, bucket_output], ignore_index=True)
+        #         if err is not None:
+        #             errors = pandas.concat([errors, err], ignore_index=True)
+
+        for (err, bucket_output) in map(self.__train_and_generate__, uniqueKeys):
+            if bucket_output is not None:
+                result = pandas.concat([result, bucket_output], ignore_index=True)
+            if err is not None:
+                errors = pandas.concat([errors, err], ignore_index=True)
 
         result = self.__postprocess_predictions__(result)
         result.to_csv('public/result_python3.csv', sep=',')
