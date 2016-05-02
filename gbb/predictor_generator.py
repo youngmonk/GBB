@@ -4,6 +4,7 @@ from sklearn.linear_model import Ridge
 from sklearn.svm import SVR
 import concurrent.futures
 from sklearn.preprocessing import StandardScaler
+import time
 
 LOG_FLAG = True
 NORMALIZATION_FLAG = False
@@ -22,39 +23,56 @@ def generate_buckets():
     return numpy.array(bucket_data)
 
 
+def transform_variant_mapper(variant_mapper):
+    variant_mapper = variant_mapper[['Variant', 'Variant_Updated', 'Mappingin_factor', 'Reversemapping_factor']]
+    variant_mapper['Variant'] = variant_mapper['Variant'].str.upper()
+    variant_mapper['Variant_Updated'] = variant_mapper['Variant_Updated'].str.upper()
+    variant_price_mapping = variant_mapper.set_index('Variant').to_dict()
+
+    variant_mapping = variant_price_mapping['Variant_Updated']
+    price_mapping = variant_price_mapping['Mappingin_factor']
+    reverse_price_mapping = variant_price_mapping['Reversemapping_factor']
+    return variant_mapping, price_mapping, reverse_price_mapping
+
+
+def preprocess_transactions(txn, price_mapping, variant_mapping):
+    txn['Model'] = txn['Model'].str.upper()
+    txn['Variant'] = txn['Variant'].str.upper()
+    txn['City'] = txn['City'].str.upper()
+
+    # scaling prices as per features in variants
+    scaled_price = []
+    for row in txn[['Variant', 'Sold_Price']].as_matrix():
+        scaled_price.append(row[1]*price_mapping.get(row[0], 1))
+    txn['Sold_Price'] = scaled_price
+
+    # mapping in variants
+    # if no mapping present return the variant as it is
+    txn['Variant'] = txn['Variant'].apply(lambda x: variant_mapping.get(x, x))
+
+    txn['key'] = txn['Model'] + "$" + txn['Variant'] + "$" + txn['City']
+    txn['Age'] = txn['Transaction_Year'] - txn['Year']
+
+    # removing unnecessary columns
+    txn = txn[['key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
+
+    return txn
+
+
 class GBBPredictor(object):
 
     def __init__(self):
         self.txn = pandas.read_csv('txn.csv')
-        self.variant_mapper = pandas.read_csv('MappingPricer.csv')
-        self.variant_mapper = self.variant_mapper[['Variant', 'Variant_Updated']]
-        self.variant_mapper['Variant'] = self.variant_mapper['Variant'].str.upper()
-        self.variant_mapper['Variant_Updated'] = self.variant_mapper['Variant_Updated'].str.upper()
-        self.mapping = self.variant_mapper.set_index('Variant').to_dict()
-        self.mapping = self.mapping['Variant_Updated']
+
+        # load mapping
+        variant_mapper = pandas.read_csv('MappingPricer.csv')
+        self.variant_mapping, self.price_mapping, self.reverse_price_mapping = transform_variant_mapper(variant_mapper)
+
         self.bucketed_queries = generate_buckets()
-
-    # private method
-    def __preprocess_transactions__(self, txn):
-        txn['Model'] = txn['Model'].str.upper()
-        txn['Variant'] = txn['Variant'].str.upper()
-        txn['City'] = txn['City'].str.upper()
-
-        # mapping in variants
-        # if no mapping present return the variant as it is
-        txn['Variant'] = txn['Variant'].apply(lambda x: self.mapping.get(x, x))
-
-        txn['key'] = txn['Model'] + "$" + txn['Variant'] + "$" + txn['City']
-        txn['Age'] = txn['Transaction_Year'] - txn['Year']
-
-        # removing unnecessary columns
-        txn = txn[['key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
-
-        return txn
 
     def __postprocess_predictions__(self, result):
         inv_map = {}
-        for k, v in self.mapping.items():
+        for k, v in self.variant_mapping.items():
             if k != v:
                 inv_map[v] = inv_map.get(v, [])
                 inv_map[v].append(k)
@@ -67,6 +85,7 @@ class GBBPredictor(object):
             for similar_variant in similar_variants:
                 similar_variant_data = res_subset.copy(deep=True)
                 similar_variant_data['Variant'] = similar_variant
+                similar_variant_data['predPrice'] *= self.reverse_price_mapping[similar_variant]
                 result = pandas.concat([result, similar_variant_data], ignore_index=True)
 
         return result
@@ -134,7 +153,7 @@ class GBBPredictor(object):
             return errors, None
 
     def train_and_generate(self):
-        self.txn = self.__preprocess_transactions__(self.txn)
+        self.txn = preprocess_transactions(self.txn, self.price_mapping, self.variant_mapping)
 
         uniqueKeys = self.txn['key'].unique()
 
@@ -158,3 +177,9 @@ class GBBPredictor(object):
         result = self.__postprocess_predictions__(result)
         result.to_csv('public/result_python3.csv', sep=',')
         errors.to_csv('public/training_errors.csv', sep=',')
+
+
+# start_time = time.time()
+# GBBPredictor().train_and_generate()
+# finish_time = time.time()
+# print('Total time : ', finish_time-start_time, 'secs')
