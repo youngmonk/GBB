@@ -42,6 +42,12 @@
                 </div>
                 <div class="panel-body">
                     Trigger new GBB learner.
+                    <div class="radio">
+                      <label><input type="radio" ng-model="trainerType" value="svr" name="trainerType">SVR (Non-Linear)</label>
+                    </div>
+                    <div class="radio">
+                      <label><input type="radio" ng-model="trainerType" value="ridge" name="trainerType">Ridge (Linear)</label>
+                    </div>
                     <button class="btn btn-success" ng-click="triggerTraining()" ng-disabled="status!=='IDLE'">
                         Start
                     </button>

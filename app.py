@@ -28,6 +28,7 @@ def send_assets(path):
 predictor.init(app=app)
 
 if __name__ == "__main__":
+    # app.run(host='0.0.0.0', port=7000) # debug server
     print('Starting server')
     http_server = WSGIServer(('', 7000), app)
     http_server.serve_forever()

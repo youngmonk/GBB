@@ -40,7 +40,11 @@ def init(app):
     @app.route('/train_and_generate', methods=['POST'])
     def train_and_generate():
         app.logger.info("Training new model")
+        learner_type = request.get_json(force=True)['learner']
         PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Training new model'})
+
+        predictor_generator.LINEAR = learner_type == 'ridge'
+        predictor_generator.NORMALIZATION_FLAG = learner_type == 'svr'
 
         start_time = time.time()
         predictor_generator.GBBPredictor().train_and_generate()

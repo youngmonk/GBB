@@ -12,6 +12,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
 .controller('homeCtrl', ['$scope', '$http', 'FileUploader', function($scope, $http, FileUploader) {
     $scope.uploadError = "";
     $scope.status = 'IDLE';
+    $scope.trainerType = "ridge";
 
     $scope.logs = [];
     //update predictor status
@@ -48,7 +49,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
     $scope.triggerTraining = function() {
         $scope.status = 'Training in Progress';
 
-        $http.post('/train_and_generate', {})
+        $http.post('/train_and_generate', { learner: $scope.trainerType })
             .success(function(res) {
                 $scope.status = 'IDLE';
                 getConsoleLog();
