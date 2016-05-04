@@ -1,33 +1,26 @@
-from flask import Flask, send_from_directory
-from routes import predictor
+from flask import Flask
+from routes import predictor, root_routes
 from gevent.wsgi import WSGIServer
+from models.predicted_prices import db
 import logging
 
 app = Flask(__name__, static_url_path='/public')
-UPLOAD_FOLDER = ''
-
-# app.config['DEBUG'] = True
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-@app.route('/')
-def root():
-    return send_from_directory('public', 'index.html')
+def init_app():
+    app.config.from_object('config.Config')
+    db.init_app(app=app)
 
-
-@app.route('/loaderio-41a415f519dced3ce153f1a9fe518a17/', methods=['GET'])
-def verify_loaderio():
-    return 'loaderio-41a415f519dced3ce153f1a9fe518a17'
-
-
-@app.route('/assets/<path:path>')
-def send_assets(path):
-    return send_from_directory('public', path)
 
 # initialize all routes
-predictor.init(app=app)
+def init_routes():
+    root_routes.init(app=app)
+    predictor.init(app=app)
+
 
 if __name__ == "__main__":
+    init_app()
+    init_routes()
     # app.run(host='0.0.0.0', port=7000) # debug server
     print('Starting server')
     http_server = WSGIServer(('', 7000), app)
