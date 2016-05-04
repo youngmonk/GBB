@@ -4,6 +4,7 @@ from werkzeug import secure_filename
 import time
 import json
 from gbb import predictor_generator
+from models.predicted_prices import PredictedPrices
 
 ALLOWED_EXTENSIONS = {'csv', 'jpg'}
 UPLOAD_FOLDER = ''
@@ -51,4 +52,12 @@ def init(app):
         finish_time = time.time()
 
         print("Finished in " + str(finish_time - start_time) + " secs")
+        return 'success'
+
+    @app.route('/save_predicted_prices', methods=["POST"])
+    def save_predicted_prices():
+        pr = PredictedPrices(make='TestBeat', model='TestLS', version='TestVersion', city='Bangalore',
+                              year=2014, kms=1000, age=5, key='Test$Beat', good_price=52000)
+
+        pr.save()
         return 'success'
