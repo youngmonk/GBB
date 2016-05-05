@@ -36,6 +36,7 @@ def transform_variant_mapper(variant_mapper):
 
 
 def preprocess_transactions(txn, price_mapping, variant_mapping):
+    txn['Make'] = txn['Make'].str.upper()
     txn['Model'] = txn['Model'].str.upper()
     txn['Variant'] = txn['Variant'].str.upper()
     txn['City'] = txn['City'].str.upper()
@@ -54,7 +55,7 @@ def preprocess_transactions(txn, price_mapping, variant_mapping):
     txn['Age'] = txn['Transaction_Year'] - txn['Year']
 
     # removing unnecessary columns
-    txn = txn[['key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
+    txn = txn[['Make', 'key', 'Year', 'Ownership', 'Out_Kms', 'Age', 'Sold_Price']]
 
     return txn
 
@@ -144,6 +145,8 @@ class GBBPredictor(object):
             bucketedRes['model'] = inputKey.split('$')[0]
             bucketedRes['version'] = inputKey.split('$')[1]
             bucketedRes['city'] = inputKey.split('$')[2]
+            bucketedRes['key'] = inputKey
+            bucketedRes['Make'] = training_data['Make'].as_matrix()[0]
             bucketedRes['good_price'] = label_pred
 
             print('Finished for ' + inputKey + ". ")
