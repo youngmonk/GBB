@@ -146,7 +146,7 @@ class GBBPredictor(object):
             bucketedRes['version'] = inputKey.split('$')[1]
             bucketedRes['city'] = inputKey.split('$')[2]
             bucketedRes['key'] = inputKey
-            bucketedRes['Make'] = training_data['Make'].as_matrix()[0]
+            bucketedRes['make'] = training_data['Make'].as_matrix()[0]
             bucketedRes['good_price'] = label_pred
 
             print('Finished for ' + inputKey + ". ")

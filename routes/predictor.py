@@ -6,6 +6,7 @@ import json
 from gbb import predictor_generator
 from models.predicted_prices import PredictedPrices
 import pandas as pd
+import hashlib
 
 ALLOWED_EXTENSIONS = {'csv', 'jpg'}
 UPLOAD_FOLDER = ''
@@ -60,8 +61,13 @@ def init(app):
         app.logger.info("Saving predicted prices")
         PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Saving predicted prices'})
 
-        predicted_price_buckets = pd.read_csv('public/result_python3.csv')
-        predicted_prices_dicts = predicted_price_buckets.to_dict('records')
+        pred_res = pd.read_csv('public/result_python3.csv')
+        # compute md5 hashes
+        pred_res['md5'] = pred_res['make'] + pred_res['model'] + pred_res['version'] + pred_res['city'] + \
+                          pred_res['year'].apply(str) + pred_res['kms'].apply(str)
+        pred_res['md5'] = [hashlib.md5(val.encode('utf-8')).hexdigest() for val in pred_res['md5']]
+
+        predicted_prices_dicts = pred_res.to_dict('records')
         
         start_time = time.time()
         PredictedPrices.save_bulk(predicted_prices_dicts)
