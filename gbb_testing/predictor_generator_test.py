@@ -1,6 +1,6 @@
 # import sys
 # sys.path.append('/home/sainageswar/youngmonk/GBBpy')
-from gbb import predictor_generator as pgr
+from gbb import preprocess as pgr
 import unittest
 import pandas
 import numpy as np
