@@ -59,4 +59,18 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
                 alert('An error occurred');
             })
     };
+
+    $scope.updatePricelistDB = function() {
+        $scope.status = 'Updating DB';
+
+        $http.post('/save_predicted_prices', {})
+            .success(function(res) {
+                $scope.status = 'IDLE';
+                getConsoleLog();
+            })
+            .error(function(err) {
+                $scope.status = 'IDLE';
+                alert('An error occurred');
+            })
+    };
 }]);

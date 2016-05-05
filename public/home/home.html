@@ -79,7 +79,10 @@
                     Update pricelist DB
                 </div>
                 <div class="panel-body">
-
+                    Update pricelist database with currently generated bucketed pricelist
+                    <button class="btn btn-success" ng-click="updatePricelistDB()" ng-disabled="status!=='IDLE'">
+                        Update
+                    </button>
                 </div>
             </div>
 

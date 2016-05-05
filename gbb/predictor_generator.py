@@ -71,6 +71,7 @@ class GBBPredictor(object):
         self.bucketed_queries = generate_buckets()
 
     def __postprocess_predictions__(self, result):
+        print('Postprocessing transactions')
         inv_map = {}
         for k, v in self.variant_mapping.items():
             if k != v:
@@ -79,15 +80,16 @@ class GBBPredictor(object):
 
         # add new rows for inverse mapping
         for variant in inv_map:
-            res_subset = result[result['Variant'] == variant].copy(deep=True)
+            res_subset = result[result['version'] == variant].copy(deep=True)
             similar_variants = inv_map[variant]
 
             for similar_variant in similar_variants:
                 similar_variant_data = res_subset.copy(deep=True)
-                similar_variant_data['Variant'] = similar_variant
-                similar_variant_data['predPrice'] *= self.reverse_price_mapping[similar_variant]
+                similar_variant_data['version'] = similar_variant
+                similar_variant_data['good_price'] *= self.reverse_price_mapping[similar_variant]
                 result = pandas.concat([result, similar_variant_data], ignore_index=True)
 
+        print('Postprocessing finished')
         return result
 
     # Trains model for particular model, version and city. Generates data for
@@ -96,7 +98,7 @@ class GBBPredictor(object):
     def __train_and_generate__(self, inputKey):
         training_data = self.txn[self.txn['key'] == inputKey]
         bucketedRes = pandas.DataFrame(
-            columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
+            columns=['model', 'version', 'city', 'ownership', 'year', 'kms', 'key', 'age', 'good_price'])
         errors = pandas.DataFrame(columns=['Key', 'Msg', 'Count'])
 
         try:
@@ -135,14 +137,14 @@ class GBBPredictor(object):
                 label_pred = numpy.exp(label_pred)
                 label_pred = numpy.round(label_pred)
 
-            bucketedRes['Year'] = self.bucketed_queries[:, 0]
-            bucketedRes['Ownership'] = self.bucketed_queries[:, 1]
-            bucketedRes['Out_Kms'] = self.bucketed_queries[:, 2]
-            bucketedRes['Age'] = self.bucketed_queries[:, 3]
-            bucketedRes['Model'] = inputKey.split('$')[0]
-            bucketedRes['Variant'] = inputKey.split('$')[1]
-            bucketedRes['City'] = inputKey.split('$')[2]
-            bucketedRes['predPrice'] = label_pred
+            bucketedRes['year'] = self.bucketed_queries[:, 0]
+            bucketedRes['ownership'] = self.bucketed_queries[:, 1]
+            bucketedRes['kms'] = self.bucketed_queries[:, 2]
+            bucketedRes['age'] = self.bucketed_queries[:, 3]
+            bucketedRes['model'] = inputKey.split('$')[0]
+            bucketedRes['version'] = inputKey.split('$')[1]
+            bucketedRes['city'] = inputKey.split('$')[2]
+            bucketedRes['good_price'] = label_pred
 
             print('Finished for ' + inputKey + ". ")
             return None, bucketedRes
@@ -157,8 +159,7 @@ class GBBPredictor(object):
 
         uniqueKeys = self.txn['key'].unique()
 
-        result = pandas.DataFrame(
-            columns=['Model', 'Variant', 'City', 'Ownership', 'Year', 'Out_Kms', 'key', 'Age', 'predPrice'])
+        result = pandas.DataFrame()
         errors = pandas.DataFrame(columns=['Key', 'Msg', 'Count'])
 
         # with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
@@ -174,7 +175,10 @@ class GBBPredictor(object):
             if err is not None:
                 errors = pandas.concat([errors, err], ignore_index=True)
 
+        start_time = time.time()
         result = self.__postprocess_predictions__(result)
+        end_time = time.time()
+        print('Postprocessing time : ', end_time-start_time, ' secs')
         result.to_csv('public/result_python3.csv', sep=',')
         errors.to_csv('public/training_errors.csv', sep=',')
 

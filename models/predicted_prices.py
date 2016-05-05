@@ -27,3 +27,10 @@ class PredictedPrices(db.Model):
         self.md5 = 'sdfdsf'
         db.session.add(self)
         db.session.commit()
+
+    @classmethod
+    def save_bulk(cls, data):
+        # Transaction: Either both deletion and insertion happen or none of them happen :)
+        db.engine.execute('delete from predicted_prices')
+        db.session.bulk_insert_mappings(cls, data)
+        db.session.commit()

@@ -5,6 +5,7 @@ import time
 import json
 from gbb import predictor_generator
 from models.predicted_prices import PredictedPrices
+import pandas as pd
 
 ALLOWED_EXTENSIONS = {'csv', 'jpg'}
 UPLOAD_FOLDER = ''
@@ -41,9 +42,9 @@ def init(app):
     @app.route('/train_and_generate', methods=['POST'])
     def train_and_generate():
         app.logger.info("Training new model")
-        learner_type = request.get_json(force=True)['learner']
         PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Training new model'})
 
+        learner_type = request.get_json(force=True)['learner']
         predictor_generator.LINEAR = learner_type == 'ridge'
         predictor_generator.NORMALIZATION_FLAG = learner_type == 'svr'
 
@@ -51,13 +52,20 @@ def init(app):
         predictor_generator.GBBPredictor().train_and_generate()
         finish_time = time.time()
 
-        print("Finished in " + str(finish_time - start_time) + " secs")
+        app.logger.info("Finished in " + str(finish_time - start_time) + " secs")
         return 'success'
 
     @app.route('/save_predicted_prices', methods=["POST"])
     def save_predicted_prices():
-        pr = PredictedPrices(make='TestBeat', model='TestLS', version='TestVersion', city='Bangalore',
-                              year=2014, kms=1000, age=5, key='Test$Beat', good_price=52000)
+        app.logger.info("Saving predicted prices")
+        PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Saving predicted prices'})
 
-        pr.save()
+        predicted_price_buckets = pd.read_csv('public/result_python3.csv')
+        predicted_prices_dicts = predicted_price_buckets.to_dict('records')
+        
+        start_time = time.time()
+        PredictedPrices.save_bulk(predicted_prices_dicts)
+        finish_time = time.time()
+
+        app.logger.info("Finished insertion in " + str(finish_time - start_time) + " secs")
         return 'success'
