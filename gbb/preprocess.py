@@ -7,7 +7,7 @@ def transform_variant_mapper(variant_mapper):
     variant_mapper = variant_mapper[['Model', 'Model_Updated', 'Variant', 'Variant_Updated', 'Mappingin_factor',
                                      'Reversemapping_factor']]
     variant_mapper['Model'] = variant_mapper['Model'].str.upper()
-    variant_mapper['Model_Updated'] = variant_mapper['Model'].str.upper()
+    variant_mapper['Model_Updated'] = variant_mapper['Model_Updated'].str.upper()
     model_mapping = variant_mapper.set_index('Model').to_dict()['Model_Updated']
 
     variant_mapper['Variant'] = variant_mapper['Variant'].str.upper()
