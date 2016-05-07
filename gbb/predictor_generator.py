@@ -32,8 +32,7 @@ class GBBPredictor(object):
 
         # load mapping
         variant_mapper = pandas.read_csv('MappingPricer.csv')
-        self.variant_mapping, self.price_mapping, \
-        self.reverse_price_mapping, self.model_mapping = pgr.transform_variant_mapper(variant_mapper)
+        self.mapper = pgr.transform_variant_mapper(variant_mapper)
 
         self.bucketed_queries = generate_buckets()
 
@@ -83,6 +82,7 @@ class GBBPredictor(object):
                 label_pred = numpy.exp(label_pred)
                 label_pred = numpy.round(label_pred)
 
+            # keys correspond with database columns
             bucketedRes['year'] = self.bucketed_queries[:, 0]
             bucketedRes['ownership'] = self.bucketed_queries[:, 1]
             bucketedRes['kms'] = self.bucketed_queries[:, 2]
@@ -103,7 +103,7 @@ class GBBPredictor(object):
             return errors, None
 
     def train_and_generate(self):
-        self.txn = pgr.preprocess_transactions(self.txn, self.price_mapping, self.variant_mapping, self.model_mapping)
+        self.txn = pgr.preprocess_transactions(self.txn, self.mapper)
 
         uniqueKeys = self.txn['key'].unique()
 
@@ -124,14 +124,14 @@ class GBBPredictor(object):
                 errors = pandas.concat([errors, err], ignore_index=True)
 
         start_time = time.time()
-        result = postpr.postprocess_predictions(result, self.variant_mapping, self.reverse_price_mapping, self.model_mapping)
+        result = postpr.postprocess_predictions(result, self.mapper)
         end_time = time.time()
         print('Postprocessing time : ', end_time-start_time, ' secs')
         result.to_csv('public/result_python3.csv', sep=',')
         errors.to_csv('public/training_errors.csv', sep=',')
 
 
-# start_time = time.time()
-# GBBPredictor().train_and_generate()
-# finish_time = time.time()
-# print('Total time : ', finish_time-start_time, 'secs')
+start_time = time.time()
+GBBPredictor().train_and_generate()
+finish_time = time.time()
+print('Total time : ', finish_time-start_time, 'secs')

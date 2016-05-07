@@ -15,38 +15,25 @@ def postprocess_variants(result, variant_mapping, reverse_price_mapping):
     inv_map = inverse_map(variant_mapping)
 
     # add new rows for inverse mapping
-    for variant in inv_map:
-        res_subset = result[result['version'] == variant].copy(deep=True)
-        similar_variants = inv_map[variant]
+    for model_variant in inv_map:
+        res_subset = result[result['model_version_updated'] == model_variant].copy(deep=True)
+        similar_model_variants = inv_map[model_variant]
 
-        for similar_variant in similar_variants:
+        for similar_model_variant in similar_model_variants:
             similar_variant_data = res_subset.copy(deep=True)
-            similar_variant_data['version'] = similar_variant
-            similar_variant_data['good_price'] *= reverse_price_mapping[similar_variant]
+
+            similar_model, similar_version = similar_model_variant.split('$')
+            similar_variant_data['version'] = similar_version
+            similar_variant_data['model'] = similar_model
+            similar_variant_data['good_price'] *= reverse_price_mapping[similar_model_variant]
             result = pandas.concat([result, similar_variant_data], ignore_index=True)
 
     return result
 
 
-def postprocess_models(result, model_mapping):
-    inv_map = inverse_map(model_mapping)
-
-    # add new rows for inverse mapping
-    for model in inv_map:
-        res_subset = result[result['model'] == model].copy(deep=True)
-        similar_variants = inv_map[model]
-
-        for similar_variant in similar_variants:
-            similar_variant_data = res_subset.copy(deep=True)
-            similar_variant_data['model'] = similar_variant
-            result = pandas.concat([result, similar_variant_data], ignore_index=True)
-
-    return result
-
-
-def postprocess_predictions(result, variant_mapping, reverse_price_mapping, model_mapping):
+def postprocess_predictions(result, mapper):
     print('Postprocessing transactions')
-    result = postprocess_models(result, model_mapping)
-    result = postprocess_variants(result, variant_mapping, reverse_price_mapping)
+    result['model_version_updated'] = result['model'] + '$' + result['version']
+    result = postprocess_variants(result, mapper.variant_mapping, mapper.reverse_price_mapping)
     print('Postprocessing finished')
     return result
