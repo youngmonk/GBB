@@ -22,12 +22,17 @@ def init(app):
         app.logger.info("Training new model")
         PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Training new model'})
 
-        learner_type = request.get_json(force=True)['learner']
+        train_request = request.get_json(force=True)
+
+        learner_type = train_request['learner']
         predictor_generator.LINEAR = learner_type == 'ridge'
         predictor_generator.NORMALIZATION_FLAG = learner_type == 'svr'
 
+        training_file = train_request['trainingFile']
+        mapping_file = train_request['mappingFile']
+
         start_time = time.time()
-        predictor_generator.GBBPredictor().train_and_generate()
+        predictor_generator.GBBPredictor(training_file=training_file, mapping_file=mapping_file).train_and_generate()
         finish_time = time.time()
 
         app.logger.info("Finished in " + str(finish_time - start_time) + " secs")

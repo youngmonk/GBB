@@ -44,6 +44,9 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
 
     getFileList();
 
+    $scope.trainingFile = 'txn.csv';
+    $scope.mappingFile = 'MappingPricer.csv';
+
     $scope.uploader = new FileUploader({
         url: '/upload_training_data',
         onWhenAddingFileFailed: function(item, filter, options) {
@@ -66,17 +69,15 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
     });
 
     $scope.triggerTraining = function() {
-        $scope.status = 'Training in Progress';
-
-        $http.post('/train_and_generate', { learner: $scope.trainerType })
-            .success(function(res) {
+        APIService.triggerTraining($scope.trainerType, $scope.trainingFile, $scope.mappingFile)
+            .then(function() {
                 $scope.status = 'IDLE';
                 getConsoleLog();
-            })
-            .error(function(err) {
+            },
+            function(err) {
                 $scope.status = 'IDLE';
                 alert('An error occurred');
-            })
+            });
     };
 
     $scope.updatePricelistDB = function() {

@@ -22,6 +22,20 @@ angular.module('myApp')
                     deferred.reject(err);
                 });
             return deferred.promise;
+        },
+
+        triggerTraining: function(trainerType, trainingFile, mappingFile) {
+            var deferred = $q.defer();
+
+            $http.post('/train_and_generate',
+                { learner: trainerType, trainingFile: trainingFile, mappingFile: mappingFile})
+                .success(function() {
+                    deferred.resolve();
+                })
+                .error(function(err) {
+                    deferred.reject(err);
+                });
+            return deferred.promise;
         }
     }
  })

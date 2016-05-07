@@ -27,11 +27,11 @@ def generate_buckets():
 
 class GBBPredictor(object):
 
-    def __init__(self):
-        self.txn = pandas.read_csv('txn.csv')
+    def __init__(self, training_file='txn.csv', mapping_file='MappingPricer.csv'):
+        self.txn = pandas.read_csv(training_file)
 
         # load mapping
-        variant_mapper = pandas.read_csv('MappingPricer.csv')
+        variant_mapper = pandas.read_csv(mapping_file)
         self.mapper = pgr.transform_variant_mapper(variant_mapper)
 
         self.bucketed_queries = generate_buckets()
