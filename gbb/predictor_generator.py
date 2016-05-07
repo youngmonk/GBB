@@ -131,7 +131,7 @@ class GBBPredictor(object):
         errors.to_csv('public/training_errors.csv', sep=',')
 
 
-start_time = time.time()
-GBBPredictor().train_and_generate()
-finish_time = time.time()
-print('Total time : ', finish_time-start_time, 'secs')
+# start_time = time.time()
+# GBBPredictor().train_and_generate()
+# finish_time = time.time()
+# print('Total time : ', finish_time-start_time, 'secs')
