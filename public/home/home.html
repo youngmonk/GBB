@@ -8,34 +8,51 @@
     </div>
 
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-6 col-md-offset-3">
             <div class="panel panel-primary">
                 <div class="panel-heading">
-                    Upload new training file or mapping file.
+                    File Manager
                 </div>
                 <div class="panel-body">
-                    <small>Note : Transaction data should be named txn.csv and mapping file as MappingPricer.csv</small>
-                    <form style="padding-top: 15px">
-                        <div class="form-group">
-                            <input type="file" id="fileId"  nv-file-select uploader="uploader" ng-disabled="status !== 'IDLE'">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small>Note : Transaction data should be named txn.csv and mapping file as MappingPricer.csv</small>
+                            <form style="padding-top: 15px">
+                                <div class="form-group">
+                                    <input type="file" id="fileId"  nv-file-select uploader="uploader" ng-disabled="status !== 'IDLE'">
+                                </div>
+                                 <ul>
+                                    <li ng-repeat="item in uploader.queue">
+                                        Name: <span ng-bind="item.file.name"></span><br/>
+                                        <button class="btn btn-success" ng-click="item.upload()">Upload</button>
+                                    </li>
+                                </ul>
+                            </form>
+                            <div class="progress" style="">
+                                <div class="progress-bar" role="progressbar" ng-style="{ 'width': uploader.progress + '%' }" style="width: 0%;"></div>
+                            </div>
+                            <p class="error-msg">{{uploadError}}</p>
                         </div>
-                         <ul>
-                            <li ng-repeat="item in uploader.queue">
-                                Name: <span ng-bind="item.file.name"></span><br/>
-                                <button class="btn btn-success" ng-click="item.upload()">Upload</button>
-                            </li>
-                        </ul>
-                    </form>
-                    <div class="progress" style="">
-                        <div class="progress-bar" role="progressbar" ng-style="{ 'width': uploader.progress + '%' }" style="width: 0%;"></div>
+
+                        <div class="col-md-6">
+                            <h4> My Files : </h4>
+                            <ul class="file-list">
+                                <li ng-repeat="file in files">
+                                    {{file}}
+                                    <a href="#" ng-click="deleteFile(file)"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></a>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <p class="error-msg">{{uploadError}}</p>
                 </div>
             </div>
 
         </div>
+    </div>
 
-         <div class="col-md-3">
+    <div class="row">
+
+         <div class="col-md-4">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     Train and generate price data
@@ -56,7 +73,7 @@
 
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     Download bucketed pricelist
@@ -73,7 +90,7 @@
 
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     Update pricelist DB

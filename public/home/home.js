@@ -9,7 +9,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
   });
 }])
 
-.controller('homeCtrl', ['$scope', '$http', 'FileUploader', function($scope, $http, FileUploader) {
+.controller('homeCtrl', function($scope, $http, FileUploader, APIService) {
     $scope.uploadError = "";
     $scope.status = 'IDLE';
     $scope.trainerType = "ridge";
@@ -25,6 +25,24 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
 
     getConsoleLog();
 
+    var getFileList = function() {
+        APIService.getFileList()
+            .then(function(fileList) {
+                $scope.files = fileList;
+            });
+    }
+
+    $scope.deleteFile = function(file) {
+        APIService.deleteFile(file)
+            .then(function() {
+                alert('Successfully deleted file');
+            }, function(err) {
+                alert('Failed to delete file');
+            });
+        getFileList();
+    };
+
+    getFileList();
 
     $scope.uploader = new FileUploader({
         url: '/upload_training_data',
@@ -36,6 +54,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
             $scope.uploadError = ""
             alert("Successfully uploaded");
             getConsoleLog();
+            getFileList();
         },
         onErrorItem: function(item, response, status, headers) {
             $scope.uploadError = "An error occurred while uploading file"
@@ -73,4 +92,4 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
                 alert('An error occurred');
             })
     };
-}]);
+});

@@ -1,5 +1,5 @@
 from flask import Flask
-from routes import predictor, root_routes
+from routes import predictor, root_routes, file_manager
 from gevent.wsgi import WSGIServer
 from models.predicted_prices import db
 import logging
@@ -16,6 +16,7 @@ def init_app():
 def init_routes():
     root_routes.init(app=app)
     predictor.init(app=app)
+    file_manager.init(app=app)
 
 
 if __name__ == "__main__":

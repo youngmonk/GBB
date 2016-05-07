@@ -11,3 +11,11 @@
 .panel {
     min-height: 200px;
 }
+
+.file-list {
+    list-style: none;
+}
+
+.file-list .glyphicon {
+    color: red;
+}
