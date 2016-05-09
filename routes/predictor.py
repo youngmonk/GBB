@@ -43,16 +43,21 @@ def init(app):
         app.logger.info("Saving predicted prices")
         PREDICTOR_TASKS.append({'task_date': int(time.time()), 'task': 'Saving predicted prices'})
 
+        save_request = request.get_json(force=True)
+        vehicle_type = save_request['vehicle_type']
+
+        print('Updating db for ', vehicle_type)
         pred_res = pd.read_csv('public/result_python3.csv')
         # compute md5 hashes
         pred_res['md5'] = pred_res['make'] + pred_res['model'] + pred_res['version'] + pred_res['city'] + \
                           pred_res['year'].apply(str) + pred_res['kms'].apply(str)
         pred_res['md5'] = [hashlib.md5(val.encode('utf-8')).hexdigest() for val in pred_res['md5']]
+        pred_res['vehicle_type'] = vehicle_type
 
         predicted_prices_dicts = pred_res.to_dict('records')
         
         start_time = time.time()
-        PredictedPrices.save_bulk(predicted_prices_dicts)
+        PredictedPrices.save_bulk(predicted_prices_dicts, vehicle_type)
         finish_time = time.time()
 
         app.logger.info("Finished insertion in " + str(finish_time - start_time) + " secs")

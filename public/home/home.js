@@ -81,10 +81,11 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
             });
     };
 
+    $scope.vehicleType = 'car';
     $scope.updatePricelistDB = function() {
         $scope.status = 'Updating DB';
 
-        $http.post('/save_predicted_prices', {})
+        $http.post('/save_predicted_prices', { vehicle_type: $scope.vehicleType })
             .success(function(res) {
                 $scope.status = 'IDLE';
                 getConsoleLog();

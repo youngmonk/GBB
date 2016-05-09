@@ -115,6 +115,13 @@
                 </div>
                 <div class="panel-body">
                     Update pricelist database with currently generated bucketed pricelist
+
+                    <div class="radio">
+                      <label><input type="radio" ng-model="vehicleType" value="bike" name="trainerType">Bikes</label>
+                    </div>
+                    <div class="radio">
+                      <label><input type="radio" ng-model="vehicleType" value="car" name="trainerType">Cars</label>
+                    </div>
                     <button class="btn btn-success" ng-click="updatePricelistDB()" ng-disabled="status!=='IDLE'">
                         Update
                     </button>

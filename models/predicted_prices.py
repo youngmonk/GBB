@@ -19,6 +19,7 @@ class PredictedPrices(db.Model):
     good_price = db.Column(db.Integer)
     md5 = db.Column(db.String(80))
     price_variation_range = db.Column(db.Numeric)
+    vehicle_type = db.Column(db.String(10))
 
     def __init__(self, **kwargs):
         for key in kwargs:
@@ -30,8 +31,8 @@ class PredictedPrices(db.Model):
         db.session.commit()
 
     @classmethod
-    def save_bulk(cls, data):
+    def save_bulk(cls, data, vehicle_type='car'):
         # Transaction: Either both deletion and insertion happen or none of them happen :)
-        db.engine.execute('delete from predicted_prices')
+        db.engine.execute("delete from predicted_prices where vehicle_type='" + vehicle_type + "'")
         db.session.bulk_insert_mappings(cls, data)
         db.session.commit()
