@@ -3,3 +3,4 @@ class Mapper:
         self.variant_mapping = None
         self.price_mapping = None
         self.reverse_price_mapping = None
+        self.price_variation_mapping = None

@@ -6,7 +6,7 @@ from gbb.mapper import Mapper
 
 def transform_variant_mapper(variant_mapper):
     variant_mapper = variant_mapper[['Model', 'Model_Updated', 'Variant', 'Variant_Updated', 'Mappingin_factor',
-                                     'Reversemapping_factor']]
+                                     'Reversemapping_factor', 'Pricevariation_range']]
     mapper = Mapper()
     variant_mapper['Model'] = variant_mapper['Model'].str.upper()
     variant_mapper['Model_Updated'] = variant_mapper['Model_Updated'].str.upper()
@@ -21,6 +21,7 @@ def transform_variant_mapper(variant_mapper):
     mapper.variant_mapping = variant_price_mapping['Model_Variant_Updated']
     mapper.price_mapping = variant_price_mapping['Mappingin_factor']
     mapper.reverse_price_mapping = variant_price_mapping['Reversemapping_factor']
+    mapper.price_variation_mapping = variant_price_mapping['Pricevariation_range']
     return mapper
 
 

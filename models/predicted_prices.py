@@ -18,6 +18,7 @@ class PredictedPrices(db.Model):
     key = db.Column(db.String(80))
     good_price = db.Column(db.Integer)
     md5 = db.Column(db.String(80))
+    price_variation_range = db.Column(db.Numeric)
 
     def __init__(self, **kwargs):
         for key in kwargs:

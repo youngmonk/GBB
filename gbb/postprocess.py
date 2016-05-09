@@ -35,5 +35,7 @@ def postprocess_predictions(result, mapper):
     print('Postprocessing transactions')
     result['model_version_updated'] = result['model'] + '$' + result['version']
     result = postprocess_variants(result, mapper.variant_mapping, mapper.reverse_price_mapping)
+    # get price variation mapping for each model_variant. 7% by default
+    result['price_variation_range'] = result['model_version_updated'].apply(lambda x: mapper.price_variation_mapping.get(x, 7))
     print('Postprocessing finished')
     return result

@@ -69,6 +69,7 @@ angular.module('myApp.home', ['ngRoute', 'angularFileUpload'])
     });
 
     $scope.triggerTraining = function() {
+        $scope.status = 'Training in Progress';
         APIService.triggerTraining($scope.trainerType, $scope.trainingFile, $scope.mappingFile)
             .then(function() {
                 $scope.status = 'IDLE';
