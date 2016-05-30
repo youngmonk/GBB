@@ -16,7 +16,7 @@ LINEAR = True
 def generate_buckets():
     bucket_data = []
 
-    for testYear in range(2004, 2016):
+    for testYear in range(2004, 2017):
         for testOutKms in range(10000, 160000, 10000):
             testAge = 2016 - testYear
             inputSample = [testYear, 1, testOutKms, testAge]
@@ -131,7 +131,8 @@ class GBBPredictor(object):
         errors.to_csv('public/training_errors.csv', sep=',')
 
 
-# start_time = time.time()
-# GBBPredictor().train_and_generate()
-# finish_time = time.time()
-# print('Total time : ', finish_time-start_time, 'secs')
+if __name__ == '__main__':
+    start_time = time.time()
+    GBBPredictor().train_and_generate()
+    finish_time = time.time()
+    print('Total time : ', finish_time-start_time, 'secs')
