@@ -1,0 +1,7 @@
+python3 is req
+sudo apt-get install python3-pip
+sudo apt-get install python3-dev
+sudo apt-get install gfortran
+sudo apt-get install libblas-dev liblapack-dev
+pip3 install -r requirements.txt # it'll be in GBB project folder
+
